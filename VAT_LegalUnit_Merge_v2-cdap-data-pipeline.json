@@ -1,0 +1,341 @@
+{
+    "name": "VAT_LegalUnit_Merge_v2",
+    "artifact": {
+        "name": "cdap-data-pipeline",
+        "version": "4.3.4",
+        "scope": "SYSTEM"
+    },
+    "config": {
+        "resources": {
+            "memoryMB": 1024,
+            "virtualCores": 1
+        },
+        "driverResources": {
+            "memoryMB": 1024,
+            "virtualCores": 1
+        },
+        "schedule": "0 * * * *",
+        "connections": [
+            {
+                "from": "VAT_File",
+                "to": "VAT_Wrangler"
+            },
+            {
+                "from": "VAT_Wrangler",
+                "to": "Joiner"
+            },
+            {
+                "from": "Joiner",
+                "to": "CDAP Table Dataset"
+            },
+            {
+                "from": "LegalUnit_File",
+                "to": "LegalUnit_Wrangler"
+            },
+            {
+                "from": "LegalUnit_Wrangler",
+                "to": "Joiner"
+            },
+            {
+                "from": "PAYE_File",
+                "to": "Wrangler3"
+            },
+            {
+                "from": "Wrangler3",
+                "to": "Joiner"
+            }
+        ],
+        "comments": [],
+        "postActions": [],
+        "engine": "mapreduce",
+        "stages": [
+            {
+                "name": "VAT_File",
+                "plugin": {
+                    "name": "File",
+                    "type": "batchsource",
+                    "label": "VAT_File",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.8.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+                        "format": "text",
+                        "recursive": "false",
+                        "filenameOnly": "false",
+                        "ignoreNonExistingFolders": "false",
+                        "referenceName": "VAT_File",
+                        "path": "file:/Users/matthewpalmer/Documents/ONS/TestData/VAT.csv"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+                "type": "batchsource",
+                "label": "VAT_File",
+                "icon": "icon-file",
+                "_uiPosition": {
+                    "top": "50px",
+                    "left": "50px"
+                }
+            },
+            {
+                "name": "VAT_Wrangler",
+                "plugin": {
+                    "name": "Wrangler",
+                    "type": "transform",
+                    "label": "VAT_Wrangler",
+                    "artifact": {
+                        "name": "wrangler-transform",
+                        "version": "3.0.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "field": "body",
+                        "precondition": "false",
+                        "threshold": "1",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"vatref\",\"type\":[\"string\",\"null\"]},{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"record_type\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]}]}",
+                        "directives": "parse-as-csv :body ',' true\ndrop body"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"vatref\",\"type\":[\"string\",\"null\"]},{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"record_type\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]}]}"
+                    }
+                ],
+                "inputSchema": [
+                    {
+                        "name": "VAT_File",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "type": "transform",
+                "label": "VAT_Wrangler",
+                "icon": "icon-DataPreparation",
+                "_uiPosition": {
+                    "top": "50px",
+                    "left": "350px"
+                }
+            },
+            {
+                "name": "Joiner",
+                "plugin": {
+                    "name": "Joiner",
+                    "type": "batchjoiner",
+                    "label": "Joiner",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.8.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "selectedFields": "VAT_Wrangler.vatref as vatref,VAT_Wrangler.sic07 as sic07_VAT,VAT_Wrangler.turnover as turnover_VAT,VAT_Wrangler.record_type as record_type,VAT_Wrangler.legalstatus as legalstatus_VAT,VAT_Wrangler.nameline as nameline_VAT,VAT_Wrangler.tradstyle as tradstyle_VAT,VAT_Wrangler.address1 as address1_VAT,VAT_Wrangler.address2 as address2_VAT,VAT_Wrangler.address3 as address3_VAT,VAT_Wrangler.address4 as _VATaddress4,VAT_Wrangler.address5 as address5_VAT,VAT_Wrangler.postcode as postcode_VAT,LegalUnit_Wrangler.ubrn as ubrn,LegalUnit_Wrangler.crn as crn,LegalUnit_Wrangler.nameline as nameline,LegalUnit_Wrangler.tradstyle as tradstyle,LegalUnit_Wrangler.address1 as address1,LegalUnit_Wrangler.address2 as address2,LegalUnit_Wrangler.address3 as address3,LegalUnit_Wrangler.address4 as address4,LegalUnit_Wrangler.address5 as address5,LegalUnit_Wrangler.postcode as postcode,LegalUnit_Wrangler.emp as emp,LegalUnit_Wrangler.sic07 as sic07,LegalUnit_Wrangler.legalstatus as legalstatus,LegalUnit_Wrangler.turnover as turnover,LegalUnit_Wrangler.uprn as uprn,Wrangler3.payeref as payeref,Wrangler3.dec_jobs as dec_jobs,Wrangler3.mar_jobs as mar_jobs,Wrangler3.june_jobs as june_jobs,Wrangler3.sept_jobs as sept_jobs,Wrangler3.jobs_lastupd as jobs_lastupd,Wrangler3.legalstatus as legalstatus_PAYE,Wrangler3.stc as stc,Wrangler3.nameline as nameline_PAYE,Wrangler3.tradstyle as tradstyle_PAYE,Wrangler3.address1 as address1_PAYE,Wrangler3.address2 as address2_PAYE,Wrangler3.address3 as address3_PAYE,Wrangler3.address4 as address4_PAYE,Wrangler3.address5 as address5_PAYE,Wrangler3.postcode as postcode_PAYE",
+                        "joinKeys": "LegalUnit_Wrangler.ubrn = VAT_Wrangler.ubrn = Wrangler3.ubrn"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"crn\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"emp\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"uprn\",\"type\":[\"string\",\"null\"]},{\"name\":\"vatref\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"record_type\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"_VATaddress4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"payeref\",\"type\":[\"string\",\"null\"]},{\"name\":\"dec_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"mar_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"june_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"sept_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"jobs_lastupd\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"stc\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode_PAYE\",\"type\":[\"string\",\"null\"]}]}"
+                    }
+                ],
+                "inputSchema": [
+                    {
+                        "name": "VAT_Wrangler",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"vatref\",\"type\":[\"string\",\"null\"]},{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"record_type\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]}]}"
+                    },
+                    {
+                        "name": "LegalUnit_Wrangler",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"crn\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"emp\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"uprn\",\"type\":[\"string\",\"null\"]}]}"
+                    },
+                    {
+                        "name": "Wrangler3",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"payeref\",\"type\":[\"string\",\"null\"]},{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"dec_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"mar_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"june_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"sept_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"jobs_lastupd\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"stc\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]}]}"
+                    }
+                ],
+                "type": "batchjoiner",
+                "label": "Joiner",
+                "icon": "icon-joiner",
+                "_uiPosition": {
+                    "top": "240px",
+                    "left": "650px"
+                }
+            },
+            {
+                "name": "CDAP Table Dataset",
+                "plugin": {
+                    "name": "Table",
+                    "type": "batchsink",
+                    "label": "CDAP Table Dataset",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.8.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"crn\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"emp\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"uprn\",\"type\":[\"string\",\"null\"]},{\"name\":\"vatref\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"record_type\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"_VATaddress4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"payeref\",\"type\":[\"string\",\"null\"]},{\"name\":\"dec_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"mar_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"june_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"sept_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"jobs_lastupd\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"stc\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode_PAYE\",\"type\":[\"string\",\"null\"]}]}",
+                        "name": "PAYE_VAT_LegalUnit_Merge",
+                        "schema.row.field": "ubrn"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"crn\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"emp\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"uprn\",\"type\":[\"string\",\"null\"]},{\"name\":\"vatref\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"record_type\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"_VATaddress4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"payeref\",\"type\":[\"string\",\"null\"]},{\"name\":\"dec_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"mar_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"june_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"sept_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"jobs_lastupd\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"stc\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode_PAYE\",\"type\":[\"string\",\"null\"]}]}",
+                "inputSchema": [
+                    {
+                        "name": "Joiner",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"crn\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"emp\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"uprn\",\"type\":[\"string\",\"null\"]},{\"name\":\"vatref\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"record_type\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"_VATaddress4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode_VAT\",\"type\":[\"string\",\"null\"]},{\"name\":\"payeref\",\"type\":[\"string\",\"null\"]},{\"name\":\"dec_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"mar_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"june_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"sept_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"jobs_lastupd\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"stc\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5_PAYE\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode_PAYE\",\"type\":[\"string\",\"null\"]}]}"
+                    }
+                ],
+                "type": "batchsink",
+                "label": "CDAP Table Dataset",
+                "icon": "icon-table",
+                "_uiPosition": {
+                    "top": "240px",
+                    "left": "950px"
+                }
+            },
+            {
+                "name": "LegalUnit_File",
+                "plugin": {
+                    "name": "File",
+                    "type": "batchsource",
+                    "label": "LegalUnit_File",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.8.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+                        "format": "text",
+                        "recursive": "false",
+                        "filenameOnly": "false",
+                        "ignoreNonExistingFolders": "false",
+                        "referenceName": "LegalUnit_File",
+                        "path": "file:/Users/matthewpalmer/Documents/ONS/TestData/Legal_Unit.csv"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+                "type": "batchsource",
+                "label": "LegalUnit_File",
+                "icon": "icon-file",
+                "_uiPosition": {
+                    "top": "240px",
+                    "left": "50px"
+                }
+            },
+            {
+                "name": "LegalUnit_Wrangler",
+                "plugin": {
+                    "name": "Wrangler",
+                    "type": "transform",
+                    "label": "LegalUnit_Wrangler",
+                    "artifact": {
+                        "name": "wrangler-transform",
+                        "version": "3.0.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "field": "body",
+                        "precondition": "false",
+                        "threshold": "1",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"crn\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"emp\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"uprn\",\"type\":[\"string\",\"null\"]}]}",
+                        "directives": "parse-as-csv :body ',' true\ndrop body"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"crn\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"emp\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"uprn\",\"type\":[\"string\",\"null\"]}]}"
+                    }
+                ],
+                "inputSchema": [
+                    {
+                        "name": "LegalUnit_File",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "type": "transform",
+                "label": "LegalUnit_Wrangler",
+                "icon": "icon-DataPreparation",
+                "_uiPosition": {
+                    "top": "240px",
+                    "left": "350px"
+                }
+            },
+            {
+                "name": "PAYE_File",
+                "plugin": {
+                    "name": "File",
+                    "type": "batchsource",
+                    "label": "PAYE_File",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.8.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+                        "format": "text",
+                        "recursive": "false",
+                        "filenameOnly": "false",
+                        "ignoreNonExistingFolders": "false",
+                        "referenceName": "PAYE_File",
+                        "path": "file:/Users/matthewpalmer/Documents/ONS/TestData/PAYE.csv"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+                "type": "batchsource",
+                "label": "PAYE_File",
+                "icon": "icon-file",
+                "_uiPosition": {
+                    "top": "430px",
+                    "left": "50px"
+                }
+            },
+            {
+                "name": "Wrangler3",
+                "plugin": {
+                    "name": "Wrangler",
+                    "type": "transform",
+                    "label": "Wrangler3",
+                    "artifact": {
+                        "name": "wrangler-transform",
+                        "version": "3.0.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "field": "*",
+                        "precondition": "false",
+                        "threshold": "1",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"payeref\",\"type\":[\"string\",\"null\"]},{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"dec_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"mar_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"june_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"sept_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"jobs_lastupd\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"stc\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]}]}",
+                        "directives": "parse-as-csv :body ',' true\ndrop body"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"payeref\",\"type\":[\"string\",\"null\"]},{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"dec_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"mar_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"june_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"sept_jobs\",\"type\":[\"string\",\"null\"]},{\"name\":\"jobs_lastupd\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"stc\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]}]}"
+                    }
+                ],
+                "inputSchema": [
+                    {
+                        "name": "PAYE_File",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "type": "transform",
+                "label": "Wrangler3",
+                "icon": "icon-DataPreparation",
+                "_uiPosition": {
+                    "top": "430px",
+                    "left": "350px"
+                }
+            }
+        ],
+        "properties": {},
+        "processTimingEnabled": true,
+        "stageLoggingEnabled": true,
+        "maxConcurrentRuns": 1
+    }
+}

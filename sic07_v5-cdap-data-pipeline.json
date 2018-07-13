@@ -1,0 +1,150 @@
+{
+    "name": "sic07_v5",
+    "artifact": {
+        "name": "cdap-data-pipeline",
+        "version": "4.3.4",
+        "scope": "SYSTEM"
+    },
+    "config": {
+        "resources": {
+            "memoryMB": 1024,
+            "virtualCores": 1
+        },
+        "driverResources": {
+            "memoryMB": 1024,
+            "virtualCores": 1
+        },
+        "schedule": "0 * * * *",
+        "connections": [
+            {
+                "from": "File",
+                "to": "Wrangler"
+            },
+            {
+                "from": "Wrangler",
+                "to": "SIC07 Table"
+            }
+        ],
+        "comments": [],
+        "postActions": [],
+        "engine": "mapreduce",
+        "stages": [
+            {
+                "name": "File",
+                "plugin": {
+                    "name": "File",
+                    "type": "batchsource",
+                    "label": "File",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.8.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "path": "/Users/matthewpalmer/Documents/ONS/SIC/SIC07_CH_condensed_list_en.csv",
+                        "ignoreNonExistingFolders": "false",
+                        "recursive": "false",
+                        "referenceName": "SIC07_CH_condensed_list_en.csv",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+                        "format": "text",
+                        "filenameOnly": "false"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "type": "batchsource",
+                "label": "File",
+                "icon": "icon-file",
+                "_uiPosition": {
+                    "top": "50px",
+                    "left": "50px"
+                }
+            },
+            {
+                "name": "Wrangler",
+                "plugin": {
+                    "name": "Wrangler",
+                    "type": "transform",
+                    "label": "Wrangler",
+                    "artifact": {
+                        "name": "wrangler-transform",
+                        "version": "3.0.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "workspaceId": "57c7b444d142d0475c550993ac92eeea",
+                        "directives": "parse-as-csv :body ',' true\ndrop body\ncleanse-column-names",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"sic_code\",\"type\":[\"string\",\"null\"]},{\"name\":\"description\",\"type\":[\"string\",\"null\"]}]}",
+                        "field": "body",
+                        "precondition": "false",
+                        "threshold": "1"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"sic_code\",\"type\":[\"string\",\"null\"]},{\"name\":\"description\",\"type\":[\"string\",\"null\"]}]}"
+                    }
+                ],
+                "inputSchema": [
+                    {
+                        "name": "File",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "type": "transform",
+                "label": "Wrangler",
+                "icon": "icon-DataPreparation",
+                "_uiPosition": {
+                    "top": "50px",
+                    "left": "350px"
+                }
+            },
+            {
+                "name": "SIC07 Table",
+                "plugin": {
+                    "name": "Table",
+                    "type": "batchsink",
+                    "label": "SIC07 Table",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.8.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"sic_code\",\"type\":[\"string\",\"null\"]},{\"name\":\"description\",\"type\":[\"string\",\"null\"]}]}",
+                        "name": "sic07",
+                        "schema.row.field": "sic_code"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"sic_code\",\"type\":[\"string\",\"null\"]},{\"name\":\"description\",\"type\":[\"string\",\"null\"]}]}"
+                    }
+                ],
+                "inputSchema": [
+                    {
+                        "name": "Wrangler",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"sic_code\",\"type\":[\"string\",\"null\"]},{\"name\":\"description\",\"type\":[\"string\",\"null\"]}]}"
+                    }
+                ],
+                "type": "batchsink",
+                "label": "SIC07 Table",
+                "icon": "icon-table",
+                "_uiPosition": {
+                    "top": "50px",
+                    "left": "650px"
+                }
+            }
+        ],
+        "properties": {},
+        "processTimingEnabled": true,
+        "stageLoggingEnabled": true,
+        "maxConcurrentRuns": 1
+    }
+}

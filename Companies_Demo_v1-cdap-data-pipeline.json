@@ -1,0 +1,632 @@
+{
+    "name": "Companies_Demo_v1",
+    "artifact": {
+        "name": "cdap-data-pipeline",
+        "version": "4.3.4",
+        "scope": "SYSTEM"
+    },
+    "config": {
+        "resources": {
+            "memoryMB": 4096,
+            "virtualCores": 1
+        },
+        "driverResources": {
+            "memoryMB": 4096,
+            "virtualCores": 1
+        },
+        "schedule": "0 * * * *",
+        "connections": [
+            {
+                "from": "Company Data",
+                "to": "Companies Wrangler"
+            },
+            {
+                "from": "Companies Wrangler",
+                "to": "Companies House Dataset"
+            },
+            {
+                "from": "Companies Wrangler",
+                "to": "Companies Validator"
+            },
+            {
+                "from": "Companies Validator",
+                "to": "Trash"
+            }
+        ],
+        "comments": [],
+        "postActions": [],
+        "engine": "mapreduce",
+        "stages": [
+            {
+                "name": "Company Data",
+                "plugin": {
+                    "name": "File",
+                    "type": "batchsource",
+                    "label": "Company Data",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.8.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "path": "file:/Users/matthewpalmer/Documents/ONS/CH/BasicCompanyData-2018-06-01-part1_5.csv",
+                        "ignoreNonExistingFolders": "false",
+                        "recursive": "false",
+                        "referenceName": "CompanyDataFile",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"},{\"name\":\"filename\",\"type\":\"string\"}]}",
+                        "format": "text",
+                        "filenameOnly": "true",
+                        "pathField": "filename"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"},{\"name\":\"filename\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "type": "batchsource",
+                "label": "Company Data",
+                "icon": "icon-file",
+                "_uiPosition": {
+                    "top": "145px",
+                    "left": "50px"
+                }
+            },
+            {
+                "name": "Companies Wrangler",
+                "plugin": {
+                    "name": "Wrangler",
+                    "type": "transform",
+                    "label": "Companies Wrangler",
+                    "artifact": {
+                        "name": "wrangler-transform",
+                        "version": "3.0.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "workspaceId": "abec3fbde9159934b2a00556abd0ceac",
+                        "directives": "parse-as-csv :body ',' true\ndrop body\ndrop offset\ncleanse-column-names\nextract-regex-groups filename (\\d{4}\\-0?[1-9]|1[012]*)\nrename filename_1_1 period\nmerge companynumber period rowkey '~'\nfill-null-or-empty :rowkey 'null'",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"companynumber\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_careof\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_pobox\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_addressline1\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_addressline2\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_posttown\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_county\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_country\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"companycategory\",\"type\":[\"string\",\"null\"]},{\"name\":\"companystatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"countryoforigin\",\"type\":[\"string\",\"null\"]},{\"name\":\"dissolutiondate\",\"type\":[\"string\",\"null\"]},{\"name\":\"incorporationdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountrefday\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountrefmonth\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_nextduedate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_lastmadeupdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountcategory\",\"type\":[\"string\",\"null\"]},{\"name\":\"returns_nextduedate\",\"type\":[\"string\",\"null\"]},{\"name\":\"returns_lastmadeupdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortcharges\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortoutstanding\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortpartsatisfied\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortsatisfied\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_1\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_2\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_3\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_4\",\"type\":[\"string\",\"null\"]},{\"name\":\"limitedpartnerships_numgenpartners\",\"type\":[\"string\",\"null\"]},{\"name\":\"limitedpartnerships_numlimpartners\",\"type\":[\"string\",\"null\"]},{\"name\":\"uri\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_1_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_1_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_2_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_2_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_3_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_3_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_4_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_4_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_5_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_5_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_6_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_6_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_7_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_7_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_8_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_8_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_9_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_9_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_10_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_10_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"ConfStmtNextDueDate\",\"type\":[\"string\",\"null\"]},{\"name\":\"ConfStmtLastMadeUpDate\",\"type\":[\"string\",\"null\"]},{\"name\":\"filename\",\"type\":[\"string\",\"null\"]},{\"name\":\"period\",\"type\":[\"string\",\"null\"]},{\"name\":\"rowkey\",\"type\":\"string\"}]}",
+                        "field": "*",
+                        "precondition": "false",
+                        "threshold": "1"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"companynumber\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_careof\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_pobox\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_addressline1\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_addressline2\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_posttown\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_county\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_country\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"companycategory\",\"type\":[\"string\",\"null\"]},{\"name\":\"companystatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"countryoforigin\",\"type\":[\"string\",\"null\"]},{\"name\":\"dissolutiondate\",\"type\":[\"string\",\"null\"]},{\"name\":\"incorporationdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountrefday\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountrefmonth\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_nextduedate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_lastmadeupdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountcategory\",\"type\":[\"string\",\"null\"]},{\"name\":\"returns_nextduedate\",\"type\":[\"string\",\"null\"]},{\"name\":\"returns_lastmadeupdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortcharges\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortoutstanding\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortpartsatisfied\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortsatisfied\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_1\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_2\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_3\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_4\",\"type\":[\"string\",\"null\"]},{\"name\":\"limitedpartnerships_numgenpartners\",\"type\":[\"string\",\"null\"]},{\"name\":\"limitedpartnerships_numlimpartners\",\"type\":[\"string\",\"null\"]},{\"name\":\"uri\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_1_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_1_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_2_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_2_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_3_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_3_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_4_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_4_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_5_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_5_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_6_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_6_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_7_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_7_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_8_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_8_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_9_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_9_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_10_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_10_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"ConfStmtNextDueDate\",\"type\":[\"string\",\"null\"]},{\"name\":\"ConfStmtLastMadeUpDate\",\"type\":[\"string\",\"null\"]},{\"name\":\"filename\",\"type\":[\"string\",\"null\"]},{\"name\":\"period\",\"type\":[\"string\",\"null\"]},{\"name\":\"rowkey\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "inputSchema": [
+                    {
+                        "name": "Company Data",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"},{\"name\":\"filename\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "type": "transform",
+                "label": "Companies Wrangler",
+                "icon": "icon-DataPreparation",
+                "_uiPosition": {
+                    "top": "145px",
+                    "left": "350px"
+                }
+            },
+            {
+                "name": "Companies House Dataset",
+                "plugin": {
+                    "name": "Table",
+                    "type": "batchsink",
+                    "label": "Companies House Dataset",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.8.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"companynumber\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_careof\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_pobox\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_addressline1\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_addressline2\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_posttown\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_county\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_country\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"companycategory\",\"type\":[\"string\",\"null\"]},{\"name\":\"companystatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"countryoforigin\",\"type\":[\"string\",\"null\"]},{\"name\":\"dissolutiondate\",\"type\":[\"string\",\"null\"]},{\"name\":\"incorporationdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountrefday\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountrefmonth\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_nextduedate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_lastmadeupdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountcategory\",\"type\":[\"string\",\"null\"]},{\"name\":\"returns_nextduedate\",\"type\":[\"string\",\"null\"]},{\"name\":\"returns_lastmadeupdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortcharges\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortoutstanding\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortpartsatisfied\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortsatisfied\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_1\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_2\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_3\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_4\",\"type\":[\"string\",\"null\"]},{\"name\":\"limitedpartnerships_numgenpartners\",\"type\":[\"string\",\"null\"]},{\"name\":\"limitedpartnerships_numlimpartners\",\"type\":[\"string\",\"null\"]},{\"name\":\"uri\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_1_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_1_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_2_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_2_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_3_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_3_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_4_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_4_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_5_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_5_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_6_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_6_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_7_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_7_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_8_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_8_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_9_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_9_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_10_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_10_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"ConfStmtNextDueDate\",\"type\":[\"string\",\"null\"]},{\"name\":\"ConfStmtLastMadeUpDate\",\"type\":[\"string\",\"null\"]},{\"name\":\"filename\",\"type\":[\"string\",\"null\"]},{\"name\":\"period\",\"type\":[\"string\",\"null\"]},{\"name\":\"rowkey\",\"type\":\"string\"}]}",
+                        "name": "CompanyData",
+                        "schema.row.field": "rowkey"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"companynumber\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_careof\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_pobox\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_addressline1\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_addressline2\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_posttown\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_county\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_country\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"companycategory\",\"type\":[\"string\",\"null\"]},{\"name\":\"companystatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"countryoforigin\",\"type\":[\"string\",\"null\"]},{\"name\":\"dissolutiondate\",\"type\":[\"string\",\"null\"]},{\"name\":\"incorporationdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountrefday\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountrefmonth\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_nextduedate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_lastmadeupdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountcategory\",\"type\":[\"string\",\"null\"]},{\"name\":\"returns_nextduedate\",\"type\":[\"string\",\"null\"]},{\"name\":\"returns_lastmadeupdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortcharges\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortoutstanding\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortpartsatisfied\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortsatisfied\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_1\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_2\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_3\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_4\",\"type\":[\"string\",\"null\"]},{\"name\":\"limitedpartnerships_numgenpartners\",\"type\":[\"string\",\"null\"]},{\"name\":\"limitedpartnerships_numlimpartners\",\"type\":[\"string\",\"null\"]},{\"name\":\"uri\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_1_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_1_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_2_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_2_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_3_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_3_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_4_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_4_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_5_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_5_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_6_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_6_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_7_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_7_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_8_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_8_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_9_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_9_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_10_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_10_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"ConfStmtNextDueDate\",\"type\":[\"string\",\"null\"]},{\"name\":\"ConfStmtLastMadeUpDate\",\"type\":[\"string\",\"null\"]},{\"name\":\"filename\",\"type\":[\"string\",\"null\"]},{\"name\":\"period\",\"type\":[\"string\",\"null\"]},{\"name\":\"rowkey\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "inputSchema": [
+                    {
+                        "name": "Companies Wrangler",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"companynumber\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_careof\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_pobox\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_addressline1\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_addressline2\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_posttown\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_county\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_country\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"companycategory\",\"type\":[\"string\",\"null\"]},{\"name\":\"companystatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"countryoforigin\",\"type\":[\"string\",\"null\"]},{\"name\":\"dissolutiondate\",\"type\":[\"string\",\"null\"]},{\"name\":\"incorporationdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountrefday\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountrefmonth\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_nextduedate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_lastmadeupdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountcategory\",\"type\":[\"string\",\"null\"]},{\"name\":\"returns_nextduedate\",\"type\":[\"string\",\"null\"]},{\"name\":\"returns_lastmadeupdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortcharges\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortoutstanding\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortpartsatisfied\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortsatisfied\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_1\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_2\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_3\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_4\",\"type\":[\"string\",\"null\"]},{\"name\":\"limitedpartnerships_numgenpartners\",\"type\":[\"string\",\"null\"]},{\"name\":\"limitedpartnerships_numlimpartners\",\"type\":[\"string\",\"null\"]},{\"name\":\"uri\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_1_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_1_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_2_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_2_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_3_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_3_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_4_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_4_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_5_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_5_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_6_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_6_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_7_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_7_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_8_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_8_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_9_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_9_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_10_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_10_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"ConfStmtNextDueDate\",\"type\":[\"string\",\"null\"]},{\"name\":\"ConfStmtLastMadeUpDate\",\"type\":[\"string\",\"null\"]},{\"name\":\"filename\",\"type\":[\"string\",\"null\"]},{\"name\":\"period\",\"type\":[\"string\",\"null\"]},{\"name\":\"rowkey\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "type": "batchsink",
+                "label": "Companies House Dataset",
+                "icon": "icon-table",
+                "_uiPosition": {
+                    "top": "50px",
+                    "left": "650px"
+                }
+            },
+            {
+                "name": "Companies Validator",
+                "plugin": {
+                    "name": "Validator",
+                    "type": "transform",
+                    "label": "Companies Validator",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.8.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "validators": "core",
+                        "validationScript": "function isValid(input, context) {\n  var isValid = true;\n  var errMsg = \"\";\n  var errCode = 0;\n  var coreValidator = context.getValidator(\"coreValidator\");\n  var logger = context.getLogger();\n\n  if (coreValidator.matchRegex(/GIR[ ]?0AA|((AB|AL|B|BA|BB|BD|BH|BL|BN|BR|BS|BT|BX|CA|CB|CF|CH|CM|CO|CR|CT|CV|CW|DA|DD|DE|DG|DH|DL|DN|DT|DY|E|EC|EH|EN|EX|FK|FY|G|GL|GY|GU|HA|HD|HG|HP|HR|HS|HU|HX|IG|IM|IP|IV|JE|KA|KT|KW|KY|L|LA|LD|LE|LL|LN|LS|LU|M|ME|MK|ML|N|NE|NG|NN|NP|NR|NW|OL|OX|PA|PE|PH|PL|PO|PR|RG|RH|RM|S|SA|SE|SG|SK|SL|SM|SN|SO|SP|SR|SS|ST|SW|SY|TA|TD|TF|TN|TQ|TR|TS|TW|UB|W|WA|WC|WD|WF|WN|WR|WS|WV|YO|ZE)(\\d[\\dA-Z]?[ ]?\\d[ABD-HJLN-UW-Z]{2}))|BFPO[ ]?\\d{1,4}/i, input.regaddress_postcode)) {} else {\n    isValid = false;\n    errMsg = \"\" + input.regaddress_postcode + \" does not match the valid pattern\";\n    errCode = 10;\n  }\n\n  if (!isValid) {\n    var message = \"(\" + errCode + \") \" + errMsg;\n    logger.warn(\"Validation failed with error {}\", message);\n  }\n\n  return {\n    \"isValid\": isValid,\n    \"errorCode\": errCode,\n    \"errorMsg\": errMsg\n  };\n}"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"companynumber\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_careof\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_pobox\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_addressline1\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_addressline2\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_posttown\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_county\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_country\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"companycategory\",\"type\":[\"string\",\"null\"]},{\"name\":\"companystatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"countryoforigin\",\"type\":[\"string\",\"null\"]},{\"name\":\"dissolutiondate\",\"type\":[\"string\",\"null\"]},{\"name\":\"incorporationdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountrefday\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountrefmonth\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_nextduedate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_lastmadeupdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountcategory\",\"type\":[\"string\",\"null\"]},{\"name\":\"returns_nextduedate\",\"type\":[\"string\",\"null\"]},{\"name\":\"returns_lastmadeupdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortcharges\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortoutstanding\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortpartsatisfied\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortsatisfied\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_1\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_2\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_3\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_4\",\"type\":[\"string\",\"null\"]},{\"name\":\"limitedpartnerships_numgenpartners\",\"type\":[\"string\",\"null\"]},{\"name\":\"limitedpartnerships_numlimpartners\",\"type\":[\"string\",\"null\"]},{\"name\":\"uri\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_1_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_1_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_2_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_2_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_3_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_3_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_4_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_4_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_5_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_5_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_6_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_6_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_7_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_7_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_8_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_8_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_9_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_9_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_10_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_10_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"ConfStmtNextDueDate\",\"type\":[\"string\",\"null\"]},{\"name\":\"ConfStmtLastMadeUpDate\",\"type\":[\"string\",\"null\"]},{\"name\":\"filename\",\"type\":[\"string\",\"null\"]},{\"name\":\"period\",\"type\":[\"string\",\"null\"]},{\"name\":\"rowkey\",\"type\":[\"string\",\"null\"]}]}",
+                "inputSchema": {
+                    "type": "record",
+                    "name": "etlSchemaBody",
+                    "fields": [
+                        {
+                            "name": "companyname",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "companynumber",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "regaddress_careof",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "regaddress_pobox",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "regaddress_addressline1",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "regaddress_addressline2",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "regaddress_posttown",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "regaddress_county",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "regaddress_country",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "regaddress_postcode",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "companycategory",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "companystatus",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "countryoforigin",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "dissolutiondate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "incorporationdate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "accounts_accountrefday",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "accounts_accountrefmonth",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "accounts_nextduedate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "accounts_lastmadeupdate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "accounts_accountcategory",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "returns_nextduedate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "returns_lastmadeupdate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "mortgages_nummortcharges",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "mortgages_nummortoutstanding",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "mortgages_nummortpartsatisfied",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "mortgages_nummortsatisfied",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "siccode_sictext_1",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "siccode_sictext_2",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "siccode_sictext_3",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "siccode_sictext_4",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "limitedpartnerships_numgenpartners",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "limitedpartnerships_numlimpartners",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "uri",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_1_condate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_1_companyname",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_2_condate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_2_companyname",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_3_condate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_3_companyname",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_4_condate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_4_companyname",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_5_condate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_5_companyname",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_6_condate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_6_companyname",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_7_condate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_7_companyname",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_8_condate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_8_companyname",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_9_condate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_9_companyname",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_10_condate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "previousname_10_companyname",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "ConfStmtNextDueDate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "ConfStmtLastMadeUpDate",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "filename",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "period",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        },
+                        {
+                            "name": "rowkey",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    ]
+                },
+                "errorDatasetName": "companies_house_errors",
+                "type": "transform",
+                "label": "Companies Validator",
+                "icon": "icon-validator",
+                "_uiPosition": {
+                    "top": "240px",
+                    "left": "650px"
+                }
+            },
+            {
+                "name": "Trash",
+                "plugin": {
+                    "name": "Trash",
+                    "type": "batchsink",
+                    "label": "Trash",
+                    "artifact": {
+                        "name": "trash-plugin",
+                        "version": "1.0.0",
+                        "scope": "USER"
+                    },
+                    "properties": {
+                        "referenceName": "Trash"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": ""
+                    }
+                ],
+                "inputSchema": [
+                    {
+                        "name": "Companies Validator",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"companynumber\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_careof\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_pobox\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_addressline1\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_addressline2\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_posttown\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_county\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_country\",\"type\":[\"string\",\"null\"]},{\"name\":\"regaddress_postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"companycategory\",\"type\":[\"string\",\"null\"]},{\"name\":\"companystatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"countryoforigin\",\"type\":[\"string\",\"null\"]},{\"name\":\"dissolutiondate\",\"type\":[\"string\",\"null\"]},{\"name\":\"incorporationdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountrefday\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountrefmonth\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_nextduedate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_lastmadeupdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"accounts_accountcategory\",\"type\":[\"string\",\"null\"]},{\"name\":\"returns_nextduedate\",\"type\":[\"string\",\"null\"]},{\"name\":\"returns_lastmadeupdate\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortcharges\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortoutstanding\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortpartsatisfied\",\"type\":[\"string\",\"null\"]},{\"name\":\"mortgages_nummortsatisfied\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_1\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_2\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_3\",\"type\":[\"string\",\"null\"]},{\"name\":\"siccode_sictext_4\",\"type\":[\"string\",\"null\"]},{\"name\":\"limitedpartnerships_numgenpartners\",\"type\":[\"string\",\"null\"]},{\"name\":\"limitedpartnerships_numlimpartners\",\"type\":[\"string\",\"null\"]},{\"name\":\"uri\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_1_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_1_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_2_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_2_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_3_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_3_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_4_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_4_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_5_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_5_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_6_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_6_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_7_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_7_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_8_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_8_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_9_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_9_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_10_condate\",\"type\":[\"string\",\"null\"]},{\"name\":\"previousname_10_companyname\",\"type\":[\"string\",\"null\"]},{\"name\":\"ConfStmtNextDueDate\",\"type\":[\"string\",\"null\"]},{\"name\":\"ConfStmtLastMadeUpDate\",\"type\":[\"string\",\"null\"]},{\"name\":\"filename\",\"type\":[\"string\",\"null\"]},{\"name\":\"period\",\"type\":[\"string\",\"null\"]},{\"name\":\"rowkey\",\"type\":[\"string\",\"null\"]}]}"
+                    }
+                ],
+                "type": "batchsink",
+                "label": "Trash",
+                "icon": "icon-TrashSink",
+                "_uiPosition": {
+                    "top": "240px",
+                    "left": "950px"
+                }
+            }
+        ],
+        "properties": {},
+        "processTimingEnabled": true,
+        "stageLoggingEnabled": true,
+        "maxConcurrentRuns": 1
+    }
+}

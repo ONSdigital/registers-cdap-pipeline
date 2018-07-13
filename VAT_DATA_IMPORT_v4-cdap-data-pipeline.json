@@ -1,0 +1,140 @@
+{
+    "name": "VAT_DATA_IMPORT_v4",
+    "artifact": {
+        "name": "cdap-data-pipeline",
+        "version": "4.3.4",
+        "scope": "SYSTEM"
+    },
+    "config": {
+        "resources": {
+            "memoryMB": 1024,
+            "virtualCores": 1
+        },
+        "driverResources": {
+            "memoryMB": 1024,
+            "virtualCores": 1
+        },
+        "schedule": "0 * * * *",
+        "connections": [
+            {
+                "from": "VAT_File",
+                "to": "VAT_Wrangler"
+            },
+            {
+                "from": "VAT_Wrangler",
+                "to": "CDAP Table Dataset"
+            }
+        ],
+        "comments": [],
+        "postActions": [],
+        "engine": "mapreduce",
+        "stages": [
+            {
+                "name": "VAT_File",
+                "plugin": {
+                    "name": "File",
+                    "type": "batchsource",
+                    "label": "VAT_File",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.8.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"},{\"name\":\"filename\",\"type\":\"string\"}]}",
+                        "format": "text",
+                        "recursive": "false",
+                        "filenameOnly": "false",
+                        "ignoreNonExistingFolders": "false",
+                        "referenceName": "VAT_File",
+                        "path": "file:/Users/matthewpalmer/Documents/ONS/TestData/${filename}.csv",
+                        "pathField": "filename"
+                    }
+                },
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"},{\"name\":\"filename\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "type": "batchsource",
+                "label": "VAT_File",
+                "icon": "icon-file",
+                "_uiPosition": {
+                    "top": "50px",
+                    "left": "50px"
+                }
+            },
+            {
+                "name": "VAT_Wrangler",
+                "plugin": {
+                    "name": "Wrangler",
+                    "type": "transform",
+                    "label": "VAT_Wrangler",
+                    "artifact": {
+                        "name": "wrangler-transform",
+                        "version": "3.0.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "field": "body",
+                        "precondition": "false",
+                        "threshold": "1",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"vatref\",\"type\":[\"string\",\"null\"]},{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"record_type\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"rowkey\",\"type\":\"string\"},{\"name\":\"period\",\"type\":[\"string\",\"null\"]}]}",
+                        "directives": "parse-as-csv :body ',' true\ndrop body\ncopy vatref rowkey\nfill-null-or-empty :rowkey 'null'\n\nextract-regex-groups filename (\\d{4}\\-0?[1-9]|1[012]*)\nrename filename_1_1 period\nmerge companynumber period rowkey '~'\nfill-null-or-empty :rowkey 'null'"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"vatref\",\"type\":[\"string\",\"null\"]},{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"record_type\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"rowkey\",\"type\":\"string\"},{\"name\":\"period\",\"type\":[\"string\",\"null\"]}]}",
+                "inputSchema": [
+                    {
+                        "name": "VAT_File",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "type": "transform",
+                "label": "VAT_Wrangler",
+                "icon": "icon-DataPreparation",
+                "_uiPosition": {
+                    "top": "50px",
+                    "left": "350px"
+                }
+            },
+            {
+                "name": "CDAP Table Dataset",
+                "plugin": {
+                    "name": "Table",
+                    "type": "batchsink",
+                    "label": "CDAP Table Dataset",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.8.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"vatref\",\"type\":[\"string\",\"null\"]},{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"record_type\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"rowkey\",\"type\":\"string\"},{\"name\":\"period\",\"type\":[\"string\",\"null\"]}]}",
+                        "name": "VAT_DATA",
+                        "schema.row.field": "rowkey"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"vatref\",\"type\":[\"string\",\"null\"]},{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"record_type\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"rowkey\",\"type\":\"string\"},{\"name\":\"period\",\"type\":[\"string\",\"null\"]}]}",
+                "inputSchema": [
+                    {
+                        "name": "VAT_Wrangler",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"vatref\",\"type\":[\"string\",\"null\"]},{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"record_type\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"rowkey\",\"type\":\"string\"},{\"name\":\"period\",\"type\":[\"string\",\"null\"]}]}"
+                    }
+                ],
+                "type": "batchsink",
+                "label": "CDAP Table Dataset",
+                "icon": "icon-table",
+                "_uiPosition": {
+                    "top": "50px",
+                    "left": "650px"
+                }
+            }
+        ],
+        "properties": {},
+        "processTimingEnabled": true,
+        "stageLoggingEnabled": true,
+        "maxConcurrentRuns": 1
+    }
+}
