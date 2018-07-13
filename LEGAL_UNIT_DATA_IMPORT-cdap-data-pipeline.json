@@ -1,0 +1,134 @@
+{
+    "name": "LEGAL_UNIT_DATA_IMPORT",
+    "artifact": {
+        "name": "cdap-data-pipeline",
+        "version": "4.3.4",
+        "scope": "SYSTEM"
+    },
+    "config": {
+        "resources": {
+            "memoryMB": 1024,
+            "virtualCores": 1
+        },
+        "driverResources": {
+            "memoryMB": 1024,
+            "virtualCores": 1
+        },
+        "schedule": "0 * * * *",
+        "connections": [
+            {
+                "from": "LegalUnit_File",
+                "to": "LegalUnit_Wrangler"
+            },
+            {
+                "from": "LegalUnit_Wrangler",
+                "to": "CDAP Table Dataset"
+            }
+        ],
+        "comments": [],
+        "postActions": [],
+        "engine": "mapreduce",
+        "stages": [
+            {
+                "name": "LegalUnit_File",
+                "plugin": {
+                    "name": "File",
+                    "type": "batchsource",
+                    "label": "LegalUnit_File",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.8.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+                        "format": "text",
+                        "recursive": "false",
+                        "filenameOnly": "false",
+                        "ignoreNonExistingFolders": "false",
+                        "referenceName": "LegalUnit_File",
+                        "path": "file:/Users/matthewpalmer/Documents/ONS/TestData/Legal_Unit.csv"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+                "type": "batchsource",
+                "label": "LegalUnit_File",
+                "icon": "icon-file",
+                "_uiPosition": {
+                    "top": "50px",
+                    "left": "50px"
+                }
+            },
+            {
+                "name": "LegalUnit_Wrangler",
+                "plugin": {
+                    "name": "Wrangler",
+                    "type": "transform",
+                    "label": "LegalUnit_Wrangler",
+                    "artifact": {
+                        "name": "wrangler-transform",
+                        "version": "3.0.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "field": "body",
+                        "precondition": "false",
+                        "threshold": "1",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"crn\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"emp\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"uprn\",\"type\":[\"string\",\"null\"]}]}",
+                        "directives": "parse-as-csv :body ',' true\ndrop body"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"crn\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"emp\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"uprn\",\"type\":[\"string\",\"null\"]}]}",
+                "inputSchema": [
+                    {
+                        "name": "LegalUnit_File",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "type": "transform",
+                "label": "LegalUnit_Wrangler",
+                "icon": "icon-DataPreparation",
+                "_uiPosition": {
+                    "top": "50px",
+                    "left": "350px"
+                }
+            },
+            {
+                "name": "CDAP Table Dataset",
+                "plugin": {
+                    "name": "Table",
+                    "type": "batchsink",
+                    "label": "CDAP Table Dataset",
+                    "artifact": {
+                        "name": "core-plugins",
+                        "version": "1.8.4",
+                        "scope": "SYSTEM"
+                    },
+                    "properties": {
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"crn\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"emp\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"uprn\",\"type\":[\"string\",\"null\"]}]}",
+                        "name": "LEGAL_UNIT_DATA",
+                        "schema.row.field": "ubrn"
+                    }
+                },
+                "outputSchema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"crn\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"emp\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"uprn\",\"type\":[\"string\",\"null\"]}]}",
+                "inputSchema": [
+                    {
+                        "name": "LegalUnit_Wrangler",
+                        "schema": "{\"type\":\"record\",\"name\":\"etlSchemaBody\",\"fields\":[{\"name\":\"ubrn\",\"type\":[\"string\",\"null\"]},{\"name\":\"crn\",\"type\":[\"string\",\"null\"]},{\"name\":\"nameline\",\"type\":[\"string\",\"null\"]},{\"name\":\"tradstyle\",\"type\":[\"string\",\"null\"]},{\"name\":\"address1\",\"type\":[\"string\",\"null\"]},{\"name\":\"address2\",\"type\":[\"string\",\"null\"]},{\"name\":\"address3\",\"type\":[\"string\",\"null\"]},{\"name\":\"address4\",\"type\":[\"string\",\"null\"]},{\"name\":\"address5\",\"type\":[\"string\",\"null\"]},{\"name\":\"postcode\",\"type\":[\"string\",\"null\"]},{\"name\":\"emp\",\"type\":[\"string\",\"null\"]},{\"name\":\"sic07\",\"type\":[\"string\",\"null\"]},{\"name\":\"legalstatus\",\"type\":[\"string\",\"null\"]},{\"name\":\"turnover\",\"type\":[\"string\",\"null\"]},{\"name\":\"uprn\",\"type\":[\"string\",\"null\"]}]}"
+                    }
+                ],
+                "type": "batchsink",
+                "label": "CDAP Table Dataset",
+                "icon": "icon-table",
+                "_uiPosition": {
+                    "top": "50px",
+                    "left": "650px"
+                }
+            }
+        ],
+        "properties": {},
+        "processTimingEnabled": true,
+        "stageLoggingEnabled": true,
+        "maxConcurrentRuns": 1
+    }
+}
